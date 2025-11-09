@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+churn_venv/
+models/
+*.joblib
+*.csv
+.env
