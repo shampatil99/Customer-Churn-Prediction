@@ -1,38 +1,7 @@
 import os
 from typing import List
 import numpy as np
-
-# Optional OpenAI import; only used if API key present
-try:
-    import openai
-except Exception:
-    openai = None
-
-
-def simple_explain(X_row, model, feature_names, X_mean=None, top_k=2):
-    # Fallback explanation method using coefficients or feature importances and deviation from mean
-    arr = X_row.values.flatten()
-    if X_mean is not None:
-        mean = np.array(X_mean)
-    else:
-        mean = np.mean(arr)
-
-    if hasattr(model, "feature_importances_"):
-        importances = np.array(model.feature_importances_)
-        contrib = (arr - mean) * importances
-    elif hasattr(model, "coef_"):
-        coef = np.array(model.coef_).flatten()
-        contrib = arr * coef
-    else:
-        contrib = np.abs(arr - mean)
-
-    idx = np.argsort(-np.abs(contrib))[:top_k]
-    parts = []
-    for i in idx:
-        fname = feature_names[i] if i < len(feature_names) else f"feature_{i}"
-        parts.append(f"{fname}={arr[i]:.3f}")
-    reason = " and ".join(parts)
-    return f"Likely drivers: {reason}."
+import openai
 
 
 def generate_explanations(X, model, feature_names, X_mean=None) -> List[str]:
@@ -44,20 +13,13 @@ def generate_explanations(X, model, feature_names, X_mean=None) -> List[str]:
 
     for i in range(len(X)):
         row = X.iloc[[i]]
-        if use_openai:
-            prompt = _build_prompt(row, model, feature_names)
-            try:
-                resp = openai.Completion.create(engine="text-davinci-003", prompt=prompt, max_tokens=60)
-                text = resp.choices[0].text.strip()
-            except Exception:
-                text = simple_explain(row, model, feature_names, X_mean)
-        else:
-            text = simple_explain(row, model, feature_names, X_mean)
+        prompt = generate_prompt(row, model, feature_names)
+        resp = openai.Completion.create(engine="text-davinci-003", prompt=prompt, max_tokens=60)
+        text = resp.choices[0].text.strip()
         explanations.append(text)
     return explanations
 
-
-def _build_prompt(row, model, feature_names):
+def generate_prompt(row, model, feature_names):
     parts = []
     for i, f in enumerate(feature_names):
         parts.append(f"{f}={row.iloc[0,i]}")

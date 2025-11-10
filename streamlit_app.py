@@ -3,11 +3,12 @@ import requests
 import pandas as pd
 from io import BytesIO
 
-API_BASE = st.sidebar.text_input("API base URL", value="http://localhost:8000")
+# API_BASE = st.sidebar.text_input("API base URL", value="http://localhost:8000")
+API_BASE = "http://localhost:8000"
 
 st.title("Customer Churn Prediction Platform")
 
-st.header("1. Upload dataset and inspect")
+st.header("1. Upload dataset")
 uploaded = st.file_uploader("Upload CSV", type=["csv"] , key="upload")
 if uploaded:
     filestr = uploaded.read()

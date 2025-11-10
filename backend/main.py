@@ -15,14 +15,6 @@ from .genai import generate_explanations
 
 app = FastAPI(title="Churn Prediction API")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 MODELS_DIR = os.path.join(os.path.dirname(__file__), "../models")
 os.makedirs(MODELS_DIR, exist_ok=True)
 
@@ -132,7 +124,6 @@ async def predict(file: UploadFile = File(...), model_name: str = Form(...)):
     feature_names = data.get("feature_names")
     X_mean = data.get("X_mean")
 
-    # Ensure features exist. If test DF has extra/missing columns, try to align
     X = df.copy()
     if feature_names is not None:
         missing = [c for c in feature_names if c not in X.columns]
