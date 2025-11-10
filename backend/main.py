@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
-from .utils import (get_dataset_metadata, clean_dataframe, prepare_features)
+from .utils import get_dataset_metadata, clean_dataframe, prepare_features
 from .genai import generate_explanations
 
 app = FastAPI(title="Churn Prediction API")
@@ -55,7 +55,14 @@ async def data_cleaning(file: UploadFile = File(...), missing_strategy: str = Fo
         "scaling": scaling,
     }
     cleaned = clean_dataframe(df.copy(), cfg)
-    return {"preview": cleaned.head(5).to_dict(orient="records"), "shape": cleaned.shape}
+    # Save cleaned data to models/cleaned_data.csv for reuse
+    cleaned_path = os.path.join(MODELS_DIR, "cleaned_data.csv")
+    cleaned.to_csv(cleaned_path, index=False)
+    return {
+        "preview": cleaned.head(5).to_dict(orient="records"),
+        "shape": cleaned.shape,
+        "saved_path": cleaned_path
+    }
 
 
 @app.post("/train_model")
